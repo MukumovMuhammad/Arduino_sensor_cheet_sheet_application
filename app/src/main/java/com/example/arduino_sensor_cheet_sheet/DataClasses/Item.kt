@@ -4,5 +4,6 @@ data class Item(
     val code: String,
     val context: String,
     val id: Int,
-    val title: String
+    val title: String,
+    val image_path: String
 )

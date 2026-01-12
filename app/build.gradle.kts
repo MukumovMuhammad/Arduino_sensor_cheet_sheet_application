@@ -61,4 +61,12 @@ dependencies {
     implementation("com.squareup.okhttp3:okhttp:4.12.0")
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.0")
     implementation("com.google.code.gson:gson:2.10.1")
+
+
+    // Basic Coil Compose dependency
+    implementation("io.coil-kt.coil3:coil-compose:3.3.0")
+    // Essential for network image loading in Coil 3
+    implementation("io.coil-kt.coil3:coil-network-okhttp:3.3.0")
+
+
 }
