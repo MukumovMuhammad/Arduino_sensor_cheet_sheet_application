@@ -2,6 +2,7 @@ plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.compose)
+    id("com.google.devtools.ksp")
 }
 
 android {
@@ -67,6 +68,11 @@ dependencies {
     implementation("io.coil-kt.coil3:coil-compose:3.3.0")
     // Essential for network image loading in Coil 3
     implementation("io.coil-kt.coil3:coil-network-okhttp:3.3.0")
+
+
+    implementation("androidx.room:room-runtime:2.8.4")
+    implementation("androidx.room:room-ktx:2.8.4")
+    ksp("androidx.room:room-compiler:2.8.4")
 
 
 }

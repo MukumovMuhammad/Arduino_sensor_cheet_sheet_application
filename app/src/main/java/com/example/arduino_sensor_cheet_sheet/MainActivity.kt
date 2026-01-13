@@ -25,7 +25,6 @@ import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DrawerValue
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
@@ -58,23 +57,42 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.room.Room
 import coil3.compose.AsyncImage
-import com.example.arduino_sensor_cheet_sheet.DataClasses.Item
 import com.example.arduino_sensor_cheet_sheet.DataClasses.fetchEnumStatus
 import com.example.arduino_sensor_cheet_sheet.ViewModels.SensorViewModel
+import com.example.arduino_sensor_cheet_sheet.room.AppDatabase
+import com.example.arduino_sensor_cheet_sheet.room.local.SensorEntity
 import com.example.arduino_sensor_cheet_sheet.ui.theme.Arduino_Sensor_cheet_SheetTheme
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
 class MainActivity : ComponentActivity() {
     val is_drawerOpen = mutableStateOf(false)
     private val sensorViewModel: SensorViewModel by viewModels()
+
     @OptIn(ExperimentalMaterial3Api::class)
     override fun onCreate(savedInstanceState: Bundle?) {
 
 
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
+
+
+        val db = Room.databaseBuilder(
+            applicationContext,
+            AppDatabase::class.java, "sensor-database",
+
+
+        ).allowMainThreadQueries().build()
+
+
+        val sensorDao = db.sensorDao()
+        val sensors: List<SensorEntity> = sensorDao.getAll()
+
+
+
         setContent {
             Arduino_Sensor_cheet_SheetTheme {
                 val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
@@ -171,7 +189,9 @@ class MainActivity : ComponentActivity() {
                     ) { paddingValues ->
 
                         PullToRefreshBox(
-                            modifier = Modifier.fillMaxSize().padding(paddingValues),
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .padding(paddingValues),
                             state = pullToRefreshState,
                             isRefreshing = isLoading,
                             onRefresh = {
@@ -187,31 +207,53 @@ class MainActivity : ComponentActivity() {
                                 horizontalArrangement = Arrangement.spacedBy(16.dp),
                                 verticalArrangement = Arrangement.spacedBy(16.dp)
                             ) {
+
+                                if (sensors.isEmpty()){
+                                    item{
+                                        Text("No sensors found")
+                                    }
+                                    item{
+                                        Text("No sensors found")
+
+                                    }
+
+                                }
+                                else{
+                                    items(sensors) { item->
+                                        SensorCard(item)
+                                    }
+                                }
+
+
                                 when(response_status){
                                     fetchEnumStatus.IDLE -> {}
                                     fetchEnumStatus.FETCHING -> {
-                                        item {
-                                            Box(
-                                                modifier = Modifier
-                                                    .fillMaxWidth()
-                                                    .padding(top = 40.dp),
-                                                contentAlignment = Alignment.Center
-                                            ) {
-                                                CircularProgressIndicator()
-                                            }
-                                        }
+
                                     }
                                     fetchEnumStatus.FAILED -> {
-                                       item{
-                                           Text("Failed", color= Color.Red)
-                                       }
+
                                     }
                                     fetchEnumStatus.SUCCESS -> {
 
-                                        items(sensorData.items) {
-                                            SensorCard(it)
+                                        val fetchedItems = sensorData.items.map { apiItem ->
+                                            SensorEntity(
+                                                title = apiItem.title,
+                                                title_img = apiItem.title_img,
+                                                scheme_img = apiItem.scheme_img,
+                                                code = apiItem.code,
+                                                context = apiItem.context,
+                                                uid = apiItem.id
+                                            )
                                         }
 
+                                        if (fetchedItems.isNotEmpty()) {
+                                            scope.launch(Dispatchers.IO) {
+                                                val dao = db.sensorDao()
+                                                dao.deleteAll()
+                                                dao.insertAll(*fetchedItems.toTypedArray())
+
+                                            }
+                                        }
                                     }
                                 }
                             }
@@ -227,7 +269,7 @@ class MainActivity : ComponentActivity() {
 
 
 @Composable
-fun SensorCard(item: Item) {
+fun SensorCard(item: SensorEntity) {
     Card(
         modifier = Modifier
             .aspectRatio(1f)
@@ -239,7 +281,7 @@ fun SensorCard(item: Item) {
         Column(modifier = Modifier.fillMaxSize()) {
             // 1. Top Image Section (placeholder or resource)
             AsyncImage(
-                model = SensorViewModel().baseUrl + item.image_path,
+                model = SensorViewModel().baseUrl + item.title_img,
                 contentDescription = null,
                 modifier = Modifier
                     .weight(1f) // Takes up remaining space
@@ -258,7 +300,7 @@ fun SensorCard(item: Item) {
                 contentAlignment = Alignment.Center
             ) {
                 Text(
-                    text = item.title,
+                    text = item.title!!,
                     color = Color.White,
                     fontSize = 18.sp,
                     fontWeight = FontWeight.Bold

@@ -16,7 +16,7 @@ import java.io.IOException
 
 class SensorViewModel: ViewModel() {
 
-    val baseUrl = "http://192.168.123.39:8080/"
+    val baseUrl = "http://192.168.123.39:8000/"
     private val okHttpClient = OkHttpClient()
 
     private val _response_status = MutableStateFlow<fetchEnumStatus>(fetchEnumStatus.IDLE)
@@ -24,8 +24,6 @@ class SensorViewModel: ViewModel() {
 
     private val _sensorData = MutableStateFlow<SensorData>(SensorData(listOf(), "", false))
     val responseData: StateFlow<SensorData> = _sensorData
-
-
 
 
     fun getAllSensor() {
