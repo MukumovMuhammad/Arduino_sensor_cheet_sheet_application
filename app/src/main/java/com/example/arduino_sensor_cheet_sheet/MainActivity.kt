@@ -89,7 +89,9 @@ class MainActivity : ComponentActivity() {
 
 
         val sensorDao = db.sensorDao()
-        val sensors: List<SensorEntity> = sensorDao.getAll()
+
+
+
 
 
 
@@ -106,6 +108,10 @@ class MainActivity : ComponentActivity() {
 
                 val pullToRefreshState = rememberPullToRefreshState()
                 var isLoading by remember { mutableStateOf(false) }
+
+                val sensors = sensorDao.getAll().collectAsState(initial = emptyList()).value
+
+
 
 
                 LaunchedEffect(isLoading) {
