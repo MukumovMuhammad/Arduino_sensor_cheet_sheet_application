@@ -10,21 +10,25 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DrawerValue
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
@@ -111,6 +115,7 @@ class MainActivity : ComponentActivity() {
 
                 val sensors = sensorDao.getAll().collectAsState(initial = emptyList()).value
 
+                val clickedSensor = remember { mutableStateOf<SensorEntity?>(null) }
 
 
 
@@ -123,150 +128,163 @@ class MainActivity : ComponentActivity() {
                 LaunchedEffect(Unit) {
                     sensorViewModel.getAllSensor()
                 }
-                ModalNavigationDrawer(
 
-                    drawerState = drawerState,
-                    drawerContent = {
-                        ModalDrawerSheet (
-                            modifier = Modifier.fillMaxWidth(0.7f)
-                        ){
-                            Text("Arduino Docs", modifier = Modifier.padding(16.dp))
-                            HorizontalDivider()
-                            NavigationDrawerItem(
-                                label = {Text("Add sensor") },
-                                selected = false,
-                                onClick = {
-                                    Toast.makeText(this@MainActivity, "Currently not working", Toast.LENGTH_SHORT).show()
-                                }
-                            )
-                            NavigationDrawerItem(
-                                label = {Text("About app") },
-                                selected = false,
-                                onClick = {
-                                    Toast.makeText(this@MainActivity, "Currently not working", Toast.LENGTH_SHORT).show()
-                                }
-                            )
-                        }
+                if (clickedSensor.value != null) {
+                    SensorScreen(item = clickedSensor.value!!){
+                        clickedSensor.value = null
                     }
-                ) {
-                    Scaffold(
-                        topBar = {
-                            TopAppBar(
-                                colors = TopAppBarDefaults.topAppBarColors(
-                                    containerColor = MaterialTheme.colorScheme.primary
-                                ),
-                                title = {
-                                    if (isSearching) {
-                                        TextField(
-                                            value = searchQuery,
-                                            onValueChange = { searchQuery = it },
-                                            placeholder = { Text("Search Arduino docs…") },
-                                            singleLine = true,
-                                            modifier = Modifier.fillMaxWidth()
-                                        )
-                                    } else {
-                                        Text("Arduino Docs")
-                                    }
-                                },
-                                navigationIcon = {
-                                    IconButton(onClick = { scope.launch { drawerState.open() } }) {
-                                        Icon(
-                                            Icons.Default.Menu,
-                                            contentDescription = "Menu",
-                                            tint = MaterialTheme.colorScheme.onPrimary
-                                        )
-                                    }
-                                },
-                                actions = {
-                                    IconButton(onClick = {
-                                        if (isSearching) searchQuery = ""
-                                        isSearching = !isSearching
-                                    }) {
-                                        Icon(
-                                            if (isSearching) Icons.Default.Close else Icons.Default.Search,
-                                            contentDescription = "Search",
-                                            tint = MaterialTheme.colorScheme.onPrimary
-                                        )
-                                    }
-                                }
-                            )
-                        }
+                }
+                else{
 
-                    ) { paddingValues ->
+                    ModalNavigationDrawer(
 
-                        PullToRefreshBox(
-                            modifier = Modifier
-                                .fillMaxSize()
-                                .padding(paddingValues),
-                            state = pullToRefreshState,
-                            isRefreshing = isLoading,
-                            onRefresh = {
-                                isLoading = true
-                                sensorViewModel.getAllSensor()
+                        drawerState = drawerState,
+                        drawerContent = {
+                            ModalDrawerSheet (
+                                modifier = Modifier.fillMaxWidth(0.7f)
+                            ){
+                                Text("Arduino Docs", modifier = Modifier.padding(16.dp))
+                                HorizontalDivider()
+                                NavigationDrawerItem(
+                                    label = {Text("Add sensor") },
+                                    selected = false,
+                                    onClick = {
+                                        Toast.makeText(this@MainActivity, "Currently not working", Toast.LENGTH_SHORT).show()
+                                    }
+                                )
+                                NavigationDrawerItem(
+                                    label = {Text("About app") },
+                                    selected = false,
+                                    onClick = {
+                                        Toast.makeText(this@MainActivity, "Currently not working", Toast.LENGTH_SHORT).show()
+                                    }
+                                )
                             }
-                        ) {
-                            LazyVerticalGrid(
-                                columns = GridCells.Fixed(2),
-                                modifier = Modifier
-                                    .fillMaxSize()
-                                    .padding(16.dp),
-                                horizontalArrangement = Arrangement.spacedBy(16.dp),
-                                verticalArrangement = Arrangement.spacedBy(16.dp)
-                            ) {
-
-                                if (sensors.isEmpty()){
-                                    item{
-                                        Text("No sensors found")
-                                    }
-                                    item{
-                                        Text("No sensors found")
-
-                                    }
-
-                                }
-                                else{
-                                    items(sensors) { item->
-                                        SensorCard(item)
-                                    }
-                                }
-
-
-                                when(response_status){
-                                    fetchEnumStatus.IDLE -> {}
-                                    fetchEnumStatus.FETCHING -> {
-
-                                    }
-                                    fetchEnumStatus.FAILED -> {
-
-                                    }
-                                    fetchEnumStatus.SUCCESS -> {
-
-                                        val fetchedItems = sensorData.items.map { apiItem ->
-                                            SensorEntity(
-                                                title = apiItem.title,
-                                                title_img = apiItem.title_img,
-                                                scheme_img = apiItem.scheme_img,
-                                                code = apiItem.code,
-                                                context = apiItem.context,
-                                                uid = apiItem.id
+                        }
+                    )
+                    {
+                        Scaffold(
+                            topBar = {
+                                TopAppBar(
+                                    colors = TopAppBarDefaults.topAppBarColors(
+                                        containerColor = MaterialTheme.colorScheme.primary
+                                    ),
+                                    title = {
+                                        if (isSearching) {
+                                            TextField(
+                                                value = searchQuery,
+                                                onValueChange = { searchQuery = it },
+                                                placeholder = { Text("Search Arduino docs…") },
+                                                singleLine = true,
+                                                modifier = Modifier.fillMaxWidth()
+                                            )
+                                        } else {
+                                            Text("Arduino Docs")
+                                        }
+                                    },
+                                    navigationIcon = {
+                                        IconButton(onClick = { scope.launch { drawerState.open() } }) {
+                                            Icon(
+                                                Icons.Default.Menu,
+                                                contentDescription = "Menu",
+                                                tint = MaterialTheme.colorScheme.onPrimary
                                             )
                                         }
+                                    },
+                                    actions = {
+                                        IconButton(onClick = {
+                                            if (isSearching) searchQuery = ""
+                                            isSearching = !isSearching
+                                        }) {
+                                            Icon(
+                                                if (isSearching) Icons.Default.Close else Icons.Default.Search,
+                                                contentDescription = "Search",
+                                                tint = MaterialTheme.colorScheme.onPrimary
+                                            )
+                                        }
+                                    }
+                                )
+                            }
 
-                                        if (fetchedItems.isNotEmpty()) {
-                                            scope.launch(Dispatchers.IO) {
-                                                val dao = db.sensorDao()
-                                                dao.deleteAll()
-                                                dao.insertAll(*fetchedItems.toTypedArray())
+                        ) { paddingValues ->
 
+                            PullToRefreshBox(
+                                modifier = Modifier
+                                    .fillMaxSize()
+                                    .padding(paddingValues),
+                                state = pullToRefreshState,
+                                isRefreshing = isLoading,
+                                onRefresh = {
+                                    isLoading = true
+                                    sensorViewModel.getAllSensor()
+                                }
+                            ) {
+                                LazyVerticalGrid(
+                                    columns = GridCells.Fixed(2),
+                                    modifier = Modifier
+                                        .fillMaxSize()
+                                        .padding(16.dp),
+                                    horizontalArrangement = Arrangement.spacedBy(16.dp),
+                                    verticalArrangement = Arrangement.spacedBy(16.dp)
+                                ) {
+
+                                    if (sensors.isEmpty()){
+                                        item{
+                                            Text("No sensors found")
+                                        }
+                                        item{
+                                            Text("No sensors found")
+
+                                        }
+
+                                    }
+                                    else{
+                                        items(sensors) { item->
+                                            SensorCard(item){
+                                                clickedSensor.value = it
+                                            }
+                                        }
+                                    }
+
+
+                                    when(response_status){
+                                        fetchEnumStatus.IDLE -> {}
+                                        fetchEnumStatus.FETCHING -> {
+
+                                        }
+                                        fetchEnumStatus.FAILED -> {
+
+                                        }
+                                        fetchEnumStatus.SUCCESS -> {
+
+                                            val fetchedItems = sensorData.items.map { apiItem ->
+                                                SensorEntity(
+                                                    title = apiItem.title,
+                                                    title_img = apiItem.title_img,
+                                                    scheme_img = apiItem.scheme_img,
+                                                    code = apiItem.code,
+                                                    context = apiItem.context,
+                                                    uid = apiItem.id
+                                                )
+                                            }
+
+                                            if (fetchedItems.isNotEmpty()) {
+                                                scope.launch(Dispatchers.IO) {
+                                                    val dao = db.sensorDao()
+                                                    dao.deleteAll()
+                                                    dao.insertAll(*fetchedItems.toTypedArray())
+
+                                                }
                                             }
                                         }
                                     }
                                 }
                             }
-                        }
 
+                        }
                     }
                 }
+
             }
         }
     }
@@ -275,14 +293,15 @@ class MainActivity : ComponentActivity() {
 
 
 @Composable
-fun SensorCard(item: SensorEntity) {
+fun SensorCard(item: SensorEntity, onClick: (item: SensorEntity) -> Unit = {}) {
     Card(
         modifier = Modifier
             .aspectRatio(1f)
             .fillMaxWidth()
             .height(200.dp),
         shape = RoundedCornerShape(12.dp),
-        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
+        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
+        onClick = {onClick(item)}
     ) {
         Column(modifier = Modifier.fillMaxSize()) {
             // 1. Top Image Section (placeholder or resource)
@@ -314,4 +333,58 @@ fun SensorCard(item: SensorEntity) {
             }
         }
     }
+}
+
+
+@Composable
+@OptIn(ExperimentalMaterial3Api::class)
+fun SensorScreen(item: SensorEntity, onBack: () -> Unit){
+
+   Scaffold(
+       topBar = {
+           TopAppBar(
+               title = {
+                   Text(item.title!!)
+               },
+               navigationIcon = {
+                   IconButton(onClick = { onBack() })
+                   {
+                       Icon(Icons.Default.ArrowBack, contentDescription = "Back")
+                   }
+               }
+           )
+       }
+   ) {paddingValues ->
+       LazyColumn(modifier = Modifier.padding(paddingValues)) {
+           item {
+               AsyncImage(
+                   model = SensorViewModel().baseUrl + item.title_img,
+                   contentDescription = null,
+                   modifier = Modifier
+                       .fillMaxSize(0.5f)
+                       .background(Color.White),
+                   contentScale = ContentScale.Crop,
+                   alignment = Alignment.Center
+               )
+
+               Text(item.title!!)
+               Spacer(modifier = Modifier.height(16.dp))
+               Text(item.context!!)
+               Spacer(modifier = Modifier.height(16.dp))
+               AsyncImage(
+                   model = SensorViewModel().baseUrl + item.scheme_img,
+                   contentDescription = null,
+                   modifier = Modifier
+                       .fillMaxWidth()
+                       .background(Color.White)
+                       .aspectRatio(1f),
+                   contentScale = ContentScale.Fit
+               )
+               Text(item.code!!)
+               Spacer(modifier = Modifier.height(16.dp))
+
+           }
+
+       }
+   }
 }
