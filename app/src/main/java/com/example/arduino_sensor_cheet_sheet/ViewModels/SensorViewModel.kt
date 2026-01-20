@@ -16,7 +16,7 @@ import java.io.IOException
 
 class SensorViewModel: ViewModel() {
 
-    val baseUrl = "http://192.168.123.39:8000/"
+    val baseUrl = "http://192.168.123.42:8000/"
     private val okHttpClient = OkHttpClient()
 
     private val _response_status = MutableStateFlow<fetchEnumStatus>(fetchEnumStatus.IDLE)

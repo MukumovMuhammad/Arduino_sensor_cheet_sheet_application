@@ -16,19 +16,19 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.lazy.LazyColumn
+
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowBack
+
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.CircularProgressIndicator
+
 import androidx.compose.material3.DrawerValue
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
@@ -65,6 +65,7 @@ import androidx.room.Room
 import coil3.compose.AsyncImage
 import com.example.arduino_sensor_cheet_sheet.DataClasses.fetchEnumStatus
 import com.example.arduino_sensor_cheet_sheet.ViewModels.SensorViewModel
+import com.example.arduino_sensor_cheet_sheet.components.SensorScreen
 import com.example.arduino_sensor_cheet_sheet.room.AppDatabase
 import com.example.arduino_sensor_cheet_sheet.room.local.SensorEntity
 import com.example.arduino_sensor_cheet_sheet.ui.theme.Arduino_Sensor_cheet_SheetTheme
@@ -146,13 +147,6 @@ class MainActivity : ComponentActivity() {
                                 Text("Arduino Docs", modifier = Modifier.padding(16.dp))
                                 HorizontalDivider()
                                 NavigationDrawerItem(
-                                    label = {Text("Add sensor") },
-                                    selected = false,
-                                    onClick = {
-                                        Toast.makeText(this@MainActivity, "Currently not working", Toast.LENGTH_SHORT).show()
-                                    }
-                                )
-                                NavigationDrawerItem(
                                     label = {Text("About app") },
                                     selected = false,
                                     onClick = {
@@ -228,7 +222,14 @@ class MainActivity : ComponentActivity() {
                                     verticalArrangement = Arrangement.spacedBy(16.dp)
                                 ) {
 
-                                    if (sensors.isEmpty()){
+                                    val filteredSensors = if (searchQuery.isNotEmpty()) {
+                                        sensors.filter { it.title!!.contains(searchQuery, ignoreCase = true) }
+                                    } else {
+                                        sensors
+                                    }
+
+
+                                    if (filteredSensors.isEmpty()){
                                         item{
                                             Text("No sensors found")
                                         }
@@ -239,7 +240,7 @@ class MainActivity : ComponentActivity() {
 
                                     }
                                     else{
-                                        items(sensors) { item->
+                                        items(filteredSensors) { item->
                                             SensorCard(item){
                                                 clickedSensor.value = it
                                             }
@@ -333,58 +334,4 @@ fun SensorCard(item: SensorEntity, onClick: (item: SensorEntity) -> Unit = {}) {
             }
         }
     }
-}
-
-
-@Composable
-@OptIn(ExperimentalMaterial3Api::class)
-fun SensorScreen(item: SensorEntity, onBack: () -> Unit){
-
-   Scaffold(
-       topBar = {
-           TopAppBar(
-               title = {
-                   Text(item.title!!)
-               },
-               navigationIcon = {
-                   IconButton(onClick = { onBack() })
-                   {
-                       Icon(Icons.Default.ArrowBack, contentDescription = "Back")
-                   }
-               }
-           )
-       }
-   ) {paddingValues ->
-       LazyColumn(modifier = Modifier.padding(paddingValues)) {
-           item {
-               AsyncImage(
-                   model = SensorViewModel().baseUrl + item.title_img,
-                   contentDescription = null,
-                   modifier = Modifier
-                       .fillMaxSize(0.5f)
-                       .background(Color.White),
-                   contentScale = ContentScale.Crop,
-                   alignment = Alignment.Center
-               )
-
-               Text(item.title!!)
-               Spacer(modifier = Modifier.height(16.dp))
-               Text(item.context!!)
-               Spacer(modifier = Modifier.height(16.dp))
-               AsyncImage(
-                   model = SensorViewModel().baseUrl + item.scheme_img,
-                   contentDescription = null,
-                   modifier = Modifier
-                       .fillMaxWidth()
-                       .background(Color.White)
-                       .aspectRatio(1f),
-                   contentScale = ContentScale.Fit
-               )
-               Text(item.code!!)
-               Spacer(modifier = Modifier.height(16.dp))
-
-           }
-
-       }
-   }
 }
