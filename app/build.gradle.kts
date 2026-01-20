@@ -75,4 +75,10 @@ dependencies {
     ksp("androidx.room:room-compiler:2.8.4")
 
 
+//    for the code highlighting
+    implementation("com.github.kbiakov:CodeView-Android:1.3.2")
+
+
+
+
 }

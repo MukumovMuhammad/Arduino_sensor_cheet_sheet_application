@@ -21,15 +21,18 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.viewinterop.AndroidView
 import coil3.compose.AsyncImage
 import com.example.arduino_sensor_cheet_sheet.ViewModels.SensorViewModel
 import com.example.arduino_sensor_cheet_sheet.room.local.SensorEntity
+import io.github.kbiakov.codeview.CodeView
 
 
 @Composable
@@ -138,13 +141,7 @@ fun SensorScreen(item: SensorEntity, onBack: () -> Unit){
                         containerColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.08f)
                     )
                 ) {
-                    Text(
-                        text = item.code.orEmpty(),
-                        fontFamily = FontFamily.Monospace,
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurface,
-                        modifier = Modifier.padding(16.dp)
-                    )
+                    ArduinoCodeView(code = item.code.orEmpty())
                 }
             }
         }
@@ -152,6 +149,21 @@ fun SensorScreen(item: SensorEntity, onBack: () -> Unit){
 
     }
 }
+
+@Composable
+fun ArduinoCodeView(code: String) {
+    AndroidView(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(12.dp)),
+        factory = { context ->
+           CodeView(context).apply {
+               setCode(code)
+           }
+        }
+    )
+}
+
 
 @Composable
 fun SectionTitle(
